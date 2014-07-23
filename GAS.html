@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta http-equiv="Content-Style-Type" content="text/css" />
+<meta name="generator" content="pandoc" />
+
+<meta name="author" content="TCM" />
+
+
+<title>GAS Certification</title>
+
+<script src="GAS_files/jquery-1.11.0/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<link href="GAS_files/bootstrap-2.3.2/css/bootstrap.min.css" rel="stylesheet" />
+<link href="GAS_files/bootstrap-2.3.2/css/bootstrap-responsive.min.css" rel="stylesheet" />
+<script src="GAS_files/bootstrap-2.3.2/js/bootstrap.min.js"></script>
+
+<style type="text/css">code{white-space: pre;}</style>
+<link rel="stylesheet"
+      href="GAS_files/highlight/default.css"
+      type="text/css" />
+<script src="GAS_files/highlight/highlight.js"></script>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+<script type="text/javascript">
+if (window.hljs && document.readyState && document.readyState === "complete") {
+   window.setTimeout(function() {
+      hljs.initHighlighting();
+   }, 0);
+}
+</script>
+
+
+
+</head>
+
+<body>
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+</style>
+<div class="container-fluid main-container">
+
+
+<div id="header">
+<h1 class="title">GAS Certification</h1>
+<h4 class="author"><em>TCM</em></h4>
+<h4 class="date"><em>Tuesday, July 21, 2014</em></h4>
+</div>
+
+
+<div id="analysing-submitted-data-for-okum-gas-or-muh-1" class="section level1">
+<h1>Analysing submitted data for OKUM, GAS or MUH-1</h1>
+<p>Thomas Meisel (2014-07-22)<br />The data for this interlaboratory comparison based certification of property values were analysed by 36 labs following the nested design approached as proposed the IAG certification protocol. Participating labs received 3 packages of OKUM and MUH-1 respectively and one package of GAS. The latter was supplied as a “traceablility” sample and is here used for quality control purposes. It was the task of the labs to prepare two independent sample preparations (i.e. digstions) of each packet and analyse the preparations on two different days. Labs thus should have submitted 12 values (3x2x2 PacketxPrepxDay). important notice: .RProfile was originally taken from <a href="http://gforge.se/2014/01/fast-track-publishing-using-knitr-part-ii/">http://gforge.se/2014/01/fast-track-publishing-using-knitr-part-ii/</a> but does not work with the RStudio verion 0.98.976 as PDF option does not show up</p>
+<div id="importing-the-data-and-assigning-factors" class="section level4">
+<h4>importing the data and assigning factors</h4>
+<pre class="r"><code>source(&quot;Makefile.R&quot;)</code></pre>
+</div>
+<div id="defining-the-rm-and-measurand-to-be-analysed" class="section level3">
+<h3>defining the RM and measurand to be analysed</h3>
+<pre class="r"><code>refmat &lt;- &#39;GAS&#39; # defining the RM
+measurand.name &lt;- &#39;As&#39;</code></pre>
+</div>
+</div>
+<div id="measurand-selected-as-for-candiate-reference-material-gas" class="section level1">
+<h1>measurand selected As for candiate reference material GAS</h1>
+<pre class="r"><code># Data for certification project was gathered and joined in Excel. The files
+# were exported from Excel as xxxx.csv files to make them universially
+# readable. For this markdown the data is stored in the &#39;root/documents&#39;
+# directory.  Data is loaded (&#39;GOMGather1.R&#39;) and merged (&#39;GOMMerge.R&#39;) for
+# GAS, OKUM and MUH-1 are merged together with a methods file
+# (&#39;OKUM.method&#39;) into a universal data.frame file named &#39;GOM&#39;. All of this
+# happens in the &#39;Makefile.R&#39;</code></pre>
+<pre class="r"><code>MorT &lt;- grep(measurand.name, colnames(GOM), fixed = TRUE)  # finding the position of the measurand.name in the Columnheaders of dataframe
+ifelse(MorT[1] &lt; 21, MorT &lt;- &quot;M&quot;, MorT &lt;- &quot;T&quot;)  # testing if measurand is a major or trace element/compound (col:5-20 majors)</code></pre>
+<pre><code>## [1] &quot;T&quot;</code></pre>
+<pre class="r"><code>ifelse(MorT == &quot;T&quot;, unit &lt;- &quot;mg/kg&quot;, unit &lt;- &quot;g/100g&quot;)  # testing which unit is needed</code></pre>
+<pre><code>## [1] &quot;mg/kg&quot;</code></pre>
+<div id="defining-the-plotting-theme" class="section level4">
+<h4>defining the plotting theme</h4>
+</div>
+<div id="defining-the-function-for-plotting-methods-vs.measurand-mass-fraction.-sample-preparation-methods-are-also-marked-in-the-plot." class="section level4">
+<h4>defining the function for plotting methods vs. measurand mass fraction. Sample preparation methods are also marked in the plot.</h4>
+</div>
+<div id="defining-the-function-of-youden-plots" class="section level4">
+<h4>defining the function of Youden plots</h4>
+</div>
+<div id="initial-calculations-with-complete-data-set" class="section level4">
+<h4>initial calculations with complete data set</h4>
+<pre class="r"><code>## means over packets within lab
+meanGOM &lt;- function(x) mean(x, na.rm = TRUE)  # defining a function for further calcuations
+sdGOM &lt;- function(x) sd(x, na.rm = TRUE)  # defining a function for further calcuations, here for calculating standard deviations neede for Youden plot
+meanGOM.packet &lt;- ddply(GOM, c(&quot;Lab&quot;, &quot;Packet&quot;), numcolwise(meanGOM))  # calculated the mean for each Packet within each Lab by calculating the mean of days and preparations lumped together
+## mean over mean of packets within lab
+GOM.mean &lt;- ddply(meanGOM.packet, c(&quot;Lab&quot;), numcolwise(meanGOM))</code></pre>
+<pre class="r"><code>## median over packets within lab 
+medianGOM &lt;- function(x) median(x, na.rm=TRUE) # defining a function for further calcuations
+medianGOM.packet &lt;- ddply(GOM, c(&quot;Lab&quot;, &quot;Packet&quot;), numcolwise(medianGOM))
+GOM.sd &lt;- ddply(medianGOM.packet, c(&quot;Lab&quot;), numcolwise(sdGOM))
+## median over median of packets within lab
+GOM.median &lt;- ddply(medianGOM.packet, c(&quot;Lab&quot;), numcolwise(medianGOM))# calculated the median for each Packet within each Lab by calculating the median of days and preparations lumped together
+GOM.median &lt;- merge(GOM.median, OKUM.methods, by=&quot;Lab&quot;)</code></pre>
+<pre class="r"><code>summary(GOM[[measurand]], na.rm=TRUE, digits=4) # with values without outlier removal</code></pre>
+<pre><code>##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max.    NA&#39;s 
+##    30.8    92.0   112.2    97.6   117.2   127.0     396</code></pre>
+<pre class="r"><code>mean.before &lt;- mean(GOM.mean[[measurand]], na.rm=TRUE)
+median.before &lt;- median(GOM.median[[measurand]], na.rm=TRUE)</code></pre>
+<p>The As.2 mean of the Lab means is <strong>99.3343</strong> g/100 g<br />The As.2 median of the Lab+Package medians is <strong>112.525</strong> g/100 g</p>
+<pre class="r"><code>plot_method(measurand)</code></pre>
+<pre><code>## Warning: Removed 1 rows containing missing values (geom_point).</code></pre>
+<p><img src="GAS_files/figure-html/unnamed-chunk-2.png" title="plot of chunk unnamed-chunk-2" alt="plot of chunk unnamed-chunk-2" width="1800" /></p>
+<pre class="r"><code>plot_lab(measurand, MorT, horw = TRUE, u = FALSE)</code></pre>
+<pre><code>## geom_smooth: method=&quot;auto&quot; and size of largest group is &lt;1000, so using loess. Use &#39;method = x&#39; to change the smoothing method.</code></pre>
+<p><img src="GAS_files/figure-html/test.png" title="plot of chunk test" alt="plot of chunk test" width="2100" /></p>
+<pre class="r"><code>plot_youd(measurand.name, &#39;MUH&#39;, &#39;GAS&#39;)</code></pre>
+<pre><code>## Warning: Removed 28 rows containing missing values (geom_point).
+## Warning: Removed 28 rows containing missing values (geom_text).</code></pre>
+<p><img src="GAS_files/figure-html/unnamed-chunk-3.png" title="plot of chunk unnamed-chunk-3" alt="plot of chunk unnamed-chunk-3" width="1200" /></p>
+<pre class="r"><code>plot_youd(measurand.name, &#39;OKUM&#39;, &#39;GAS&#39;)</code></pre>
+<pre><code>## Warning: Removed 29 rows containing missing values (geom_point).
+## Warning: Removed 29 rows containing missing values (geom_text).</code></pre>
+<p><img src="GAS_files/figure-html/unnamed-chunk-4.png" title="plot of chunk unnamed-chunk-4" alt="plot of chunk unnamed-chunk-4" width="1200" /></p>
+</div>
+<div id="mandel-k-barplot-displays-the-within-lab-performance-relative-to-all-participating-labs-using-the-median-over-packages" class="section level3">
+<h3>Mandel k barplot displays the within lab performance relative to all participating labs using the median over packages</h3>
+<pre class="r"><code>#k &lt;- with(medianGOM.packet, mandel.kh(medianGOM.packet[[measurand]], g=Lab, type=&quot;k&quot;))     
+#barplot(k, las=2, col=1:4)</code></pre>
+</div>
+<div id="outlier-rejection" class="section level3">
+<h3>Outlier rejection</h3>
+<div id="removing-outliers-lab-based-on-youden-plot-and-mandels-k-lab-performance" class="section level4">
+<h4>Removing outliers lab based on Youden plot and Mandel’s k (lab performance)</h4>
+<pre class="r"><code>outlier &lt;- GAS.outlier[[measurand.name]]
+#outlier &lt;- ifelse(GAS.outlier[[measurand.name]][1]==&quot;NA&quot;, &quot;0&quot;, GAS.outlier[[measurand.name]]) # does not work for FeO
+outlier &lt;- na.omit(outlier)
+# outlier&lt;- c(16) ## defining the outlying lab here with lab# directly. Enter 0 when no outlier
+leng &lt;- length(outlier) ## counting the number of outliers for loop
+for(i in seq(leng)) ##  looping
+{
+  GOM[[measurand]] &lt;- ifelse(GOM$Lab==outlier[i], NA, GOM[[measurand]]) ## replacing values of outlying lab with &quot;NA&quot; and defining new GOM
+  message(&quot;Lab &quot;, outlier[i], &quot; was removed&quot;)
+  print(summary(GOM[[measurand]], na.rm=TRUE, digits=4))
+  }</code></pre>
+<pre><code>## Lab 18 was removed</code></pre>
+<pre><code>##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max.    NA&#39;s 
+##    40.0    96.9   112.9   104.6   118.0   127.0     400</code></pre>
+<pre class="r"><code># plot_lab(measurand, MorT, horw =TRUE, u = FALSE) # replotting without outlier, M for majors and T for traces</code></pre>
+</div>
+</div>
+<div id="calculating-mean-and-median-of-property-value" class="section level3">
+<h3>Calculating mean and median of property value</h3>
+<pre class="r"><code>summary(GOM[[measurand]], na.rm=TRUE, digits=4)</code></pre>
+<pre><code>##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max.    NA&#39;s 
+##    40.0    96.9   112.9   104.6   118.0   127.0     400</code></pre>
+<pre class="r"><code>mean &lt;- mean(tapply(GOM[[measurand]], GOM$Lab, mean, na.rm=TRUE), na.rm=TRUE) # mean of lab means after outlier removal
+median.before &lt;- median(GOM.median[[measurand]], na.rm=TRUE) # median of measurand w/o outlier removal
+medianGOM.packet.after &lt;- ddply(GOM, c(&quot;Lab&quot;, &quot;Packet&quot;), numcolwise(medianGOM)) # median Lab and Packets after outlier removal
+## median over median of packets within lab
+GOM.median.after &lt;- ddply(medianGOM.packet.after, c(&quot;Lab&quot;), numcolwise(medianGOM)) # creating a new table of median of labs after outlier removal for measurand but for entire table (all measurands)
+GOM.median.after &lt;- merge(GOM.median.after, OKUM.methods, by=&quot;Lab&quot;)
+median.after &lt;- median(GOM.median.after[[measurand]], na.rm=TRUE) # median of the individual measurand after outlier removal
+## calculating method parameters
+#  &#39;%p%&#39; &lt;- function(x, y) {as.character(paste (x, y, sep =&quot;&quot;))}
+prep &lt;-  &#39;Prep.&#39;
+method &lt;- &#39;Method.&#39;
+anal.prep &lt;- prep %p% measurand.name
+anal.method &lt;- method %p% measurand.name
+anal &lt;- GOM.median.after[[measurand]]
+anal.prep &lt;- GOM.median.after[[anal.prep]]
+anal.method &lt;- GOM.median.after[[anal.method]]
+analyte &lt;- data.frame(GOM.median.after$Lab, GOM.median.after$names, anal, anal.prep, anal.method )
+analyte &lt;- na.omit(analyte)
+
+  bymethod.n &lt;- ddply(analyte, c(&quot;anal.method&quot;), summarise, 
+                      N=length(anal), 
+                      mean = round(mean(anal), 3), 
+                      median = round(median(anal), 3), 
+                      sd = round(sd(anal),3), 
+                      se = round(sd/sqrt(N),3))</code></pre>
+</div>
+<div id="measurement-uncertainty-estimations-of-property-value" class="section level2">
+<h2>Measurement uncertainty estimations of property value</h2>
+<p>The the mean of means is <span class="math">\(\bar Y = \frac{1}{p} \sum_{i=1}^{p} Y_{i}\)</span><br />The standard deviation is <span class="math">\(s^2 = \frac{1}{p-1} \sum_{i=1}^{p}(Y_{1} - \bar Y)^2\)</span><br />The combined standard uncertainty equals then <span class="math">\(u_{char} = \frac{s}{\sqrt{p}}\)</span></p>
+<div id="nested-random-effects-in-data-analysis-two-way-anova" class="section level3">
+<h3>Nested random effects in data analysis: two way ANOVA</h3>
+<p>This model can be used when the results of the interlaboratory study are used to confirm the homogeneity of the material as well as to characterise it. The experimental scheme is illustrated in Fig X for the particular case of the IAG protocol. When the ILC consists of different methos, the result can be expressed by the equation</p>
+<p><span class="math">\(x_{ijk} = \mu + A_{i} + B{ij} + \epsilon_{ijk}\)</span></p>
+<p>where</p>
+<p><span class="math">\(x_{ijk}\)</span> is the <span class="math">\(k\)</span>th result of sample unit j reported from method/laboratory <span class="math">\(i\)</span>,<br /><span class="math">\(A_{i}\)</span> is the error due to method/laboratory <span class="math">\(i\)</span>,<br /><span class="math">\(B{ij}\)</span> is the error due to the <span class="math">\(j\)</span>th sample unit within method/laboratory <span class="math">\(i\)</span>, <span class="math">\(\epsilon_{ijk}\)</span> is the measurement error.</p>
+<p>The parameters to be estimated are the grand mean, the between-laboratory standard deviation <span class="math">\(s_{L}\)</span>, the between-bottle standard deviation <span class="math">\(s_{bb}\)</span> and the repeatability standard deviation <span class="math">\(s_{r}\)</span>. The are related as follows</p>
+<p><span class="math">\(s_{L} = \sqrt{Var(A_{i})}\)</span><br /><span class="math">\(s_{bb} = \sqrt{Var(B_{ij})}\)</span><br /><span class="math">\(s_{r} = \sqrt{Var(\epsilon_{ijk})}\)</span></p>
+<p>The formulae for computing the above-mentioned estimates read as follows. The grand mean is computed using</p>
+<p><span class="math">\(\bar x =  \frac{1}{\sum_{i=1}^{p}\sum_{j=1}^{b_i}n_{ij}} \sum_{i=1}^{p} \sum_{j=1}^{b_i} \sum_{k=1}^{n_ij}x_{ijk}\)</span></p>
+<p>where <span class="math">\(p\)</span> denotes the number of laboratories, <span class="math">\(b_{i}\)</span> the number of bottles used by method/laboratory <span class="math">\(i\)</span>, and <span class="math">\(n_{ij}\)</span> is the number of replicates measured on bottle <span class="math">\(_{ij}\)</span>. The variances are computed as follows</p>
+<p><span class="math">\(Var(\epsilon_{ijk}) = MS_{within} = s^2_r\)</span><br /><span class="math">\(Var(B_{ij}) = \frac{MS_{B \subset A} - MS_{within}}{n_0} = s^2_bb\)</span><br /><span class="math">\(Var(A_{i}) = \frac{MS_{among} - n&#39;_0Var(B_{ij})-Var(\epsilon_{ijk})}{(nb)_0} = s^2_L\)</span></p>
+<p>where</p>
+<p><span class="math">\(MS_{among} = \frac{\sum_{i=1}^{p} n_i (\bar x_A - \bar x)^2}{p-1}\)</span></p>
+<p><span class="math">\(MS_{B \subset A} = \frac{\sum_{i=1}^{p}\sum_{j=1}^{b_i}n_{ij}(\bar x_B - \bar x_A)^2}{\sum_{i=1}^{p}b_i - p}\)</span></p>
+<p><span class="math">\(MS_{within} = \frac{\sum_{i=1}^{p} \sum_{j=1}^{b_i} \sum_{k=1}^{n_ij}(x_{ijk}-\bar x_B)^2}{\sum_{i=1}^{p}\sum_{j=1}^{b_i}n_{ij}-\sum_{i=1}^{p}b_{i}}\)</span></p>
+<p>and</p>
+<p><span class="math">\(n&#39;_0 = \frac{\sum_{i=1}^p\left(\frac{\sum_{j=1}^{b_i}n^2_{ij}}{\sum_{j=1}^{b_i}n_{ij}}\right)-\frac{\sum_{i=1}^{p}\sum_{j=1}^{b_i}n^2_{ij}}{\sum_{i=1}^{p}\sum_{j=1}^{b_i}n_{ij}}}{p-1}\)</span></p>
+<p><span class="math">\(n_0 = \frac{\sum_{i=1}^{p}\sum_{j=1}^{b_i}n_{ij} -\sum_{i=1}^p\left(\frac{\sum_{j=1}^{b_i}n^2_{ij}}{\sum_{j=1}^{b_i}n_{ij}}\right)}{\sum_{i=1}^{p}b_i-p}\)</span></p>
+<p><span class="math">\((nb)_0 = \frac{\sum_{i=1}^{p}\sum_{j=1}^{b_i}n_{ij} -\frac{\sum_{i=1}^p({\sum_{j=1}^{b_i}n_{ij}})^2}{\sum_{i=1}^{p}\sum_{j=1}^{b_i}n_{ij}}}{p-1}\)</span></p>
+</div>
+<div id="solutions-of-the-above-equations-in-r" class="section level3">
+<h3>solutions of the above equations in <span class="math">\(R\)</span></h3>
+<p>ANOVA is calculated based on a linear model using the using “linear mixed effects models” of package nlme (lme {nlme})</p>
+<p>GOM.lme &lt;- lme(measurand ~ 1, random = ~ 1|Lab/Packet, data=DF.lme) # linear model with random effects</p>
+<p>the variance components are extrated with package ape (varcomp {ape})</p>
+<p><span class="math">\(s^2_L\)</span> = sL2 &lt;- varcomp(GOM.lme, FALSE, FALSE)[[1]] # between-laboratory variance<br /><span class="math">\(s^2_{bb}\)</span> = sbb2 &lt;- varcomp(GOM.lme, FALSE, FALSE)[[2]] # between bottle variance<br /><span class="math">\(s^2_r\)</span> = sr2 &lt;- varcomp(GOM.lme, FALSE, FALSE)[[3]] # repeatability standard deviation</p>
+<p>The characterisation uncertainty <span class="math">\(u_{char}\)</span> is calculated</p>
+<p>u1 &lt;- sqrt(sL2/p+sbb2/p/r+sr2/p/r/4)</p>
+<p>which is equivalent to</p>
+<p><span class="math">\(u_1 = \sqrt{\frac{s^2_L}{p}-\frac{s^2_r}{np}-\frac{s^2_{bb}}{npr}}\)</span></p>
+<p>This approach is not completly correct as it assumes 4 replicates per bottle</p>
+<p>u2 &lt;- attr(GOM.lme$fixDF,“varFixFact”) # this approach takes unbalanced data into account and is used for all further calculations.</p>
+<p>The between day variance is neglected here but the uncertainty component due to inhomogeneity is taken into account through the <span class="math">\(s^2_{bb}\)</span> compenent.</p>
+</div>
+<div id="before-outlier-removal" class="section level3">
+<h3>before outlier removal</h3>
+<pre class="r"><code>medianGOM.packet$Lab &lt;- as.factor(medianGOM.packet$Lab) # using only the median of the 3 packages per lab
+medianGOM.packet$Packet &lt;- as.factor(medianGOM.packet$Packet)
+anal &lt;- medianGOM.packet[[measurand]]
+DF.lme &lt;- data.frame(medianGOM.packet$Lab, medianGOM.packet$Packet, medianGOM.packet[[measurand]])
+DF.lme &lt;- na.omit(DF.lme)
+names(DF.lme) &lt;- c(&quot;Lab&quot;, &quot;Packet&quot;, &quot;measurand&quot;)
+GOM.lme &lt;- lme(measurand ~ 1, random = ~ 1|Lab/Packet, data=DF.lme) # linear model with random effects
+sL2 &lt;- varcomp(GOM.lme, FALSE, FALSE)[[1]] # between-laboratory variance
+sbb2 &lt;- varcomp(GOM.lme, FALSE, FALSE)[[2]] # between bottle variance
+sr2 &lt;- varcomp(GOM.lme, FALSE, FALSE)[[3]] # repeatability standard deviation
+n.p &lt;- dim(DF.lme)[1] # number of obervations
+p &lt;- length(unique(DF.lme$Lab)) # haven&#39;t found a better way how to extract the number of labs (number of groups)
+r &lt;- length(unique(DF.lme$Packet))
+u1 &lt;- sqrt(sL2/p+sbb2/p/r+sr2/p/r/4) # calculating the standard uncertainty of characterization
+u2 &lt;- attr(GOM.lme$fixDF,&quot;varFixFact&quot;) # gives the same results as u, amazing!
+# print(plot(DF.lme))</code></pre>
+</div>
+<div id="after-outlier-removal" class="section level3">
+<h3>after outlier removal</h3>
+<pre class="r"><code>medianGOM.packet.after$Lab &lt;- as.factor(medianGOM.packet$Lab) # using only the median of the 3 packages per lab
+medianGOM.packet.after$Packet &lt;- as.factor(medianGOM.packet$Packet)
+anal &lt;- medianGOM.packet.after[[measurand]]
+DF.lme &lt;- data.frame(medianGOM.packet.after$Lab, medianGOM.packet.after$Packet, medianGOM.packet.after[[measurand]])
+DF.lme &lt;- na.omit(DF.lme)
+names(DF.lme) &lt;- c(&quot;Lab&quot;, &quot;Packet&quot;, &quot;measurand&quot;)
+GOM.lme &lt;- lme(measurand ~ 1, random = ~ 1|Lab/Packet, data=DF.lme) # linear model with random effects
+sL2.a &lt;- varcomp(GOM.lme, FALSE, FALSE)[[1]] # between-laboratory variance
+sbb2.a &lt;- varcomp(GOM.lme, FALSE, FALSE)[[2]] # between bottle standard deviation
+sr2.a &lt;- varcomp(GOM.lme, FALSE, FALSE)[[3]] # repeatability standard deviation
+n.p &lt;- dim(DF.lme)[1] # number of obervations
+p &lt;- length(unique(DF.lme$Lab)) # haven&#39;t found a better way how to extract the number of labs (number of groups)
+r &lt;- length(unique(DF.lme$Packet))
+t.value &lt;- qt(0.975,df=p-1)
+u1.a &lt;- sqrt(sL2.a/p+sbb2.a/p/r+sr2.a/p/r/4) # calculating the standard uncertainty of characterization
+u2.a &lt;- attr(GOM.lme$fixDF,&quot;varFixFact&quot;) # gives the same results as u1, amazing!
+plot(DF.lme)</code></pre>
+<p><img src="GAS_files/figure-html/measurement%20uncertainty%20of%20data%20after%20outlier%20rejection.png" title="plot of chunk measurement uncertainty of data after outlier rejection" alt="plot of chunk measurement uncertainty of data after outlier rejection" width="900" /></p>
+</div>
+<div id="tests-for-normal-distribution" class="section level3">
+<h3>tests for normal distribution</h3>
+<pre class="r"><code>qqnorm(GOM.median.after[[measurand]])
+qqline(GOM.median.after[[measurand]])</code></pre>
+<p><img src="GAS_files/figure-html/QQ%20plot.png" title="plot of chunk QQ plot" alt="plot of chunk QQ plot" width="1350" /></p>
+<pre class="r"><code>analyte.noPP &lt;- subset(analyte, analyte$anal.prep!=&quot;PP&quot;) # Removing all PP preparations for comparison reasons
+median.after.noPP &lt;- median(analyte.noPP$anal)</code></pre>
+</div>
+</div>
+<div id="comparisons-of-property-value-calculations-for-gas-and-measurand-as" class="section level2">
+<h2>Comparisons of property value calculations for GAS and measurand As</h2>
+<div id="before-and-after-removal-of-outlying-labs-18" class="section level3">
+<h3>before and after removal of outlying lab(s) # 18</h3>
+<table>
+<thead>
+<tr class="header">
+<th align="left">type</th>
+<th align="left">before</th>
+<th align="left">after</th>
+<th align="left">unit</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left"><strong>mean</strong></td>
+<td align="left">99.3343</td>
+<td align="left">105.7624</td>
+<td align="left">mg/kg</td>
+</tr>
+<tr class="even">
+<td align="left"><strong>median</strong></td>
+<td align="left">112.525</td>
+<td align="left"><strong>112.55</strong></td>
+<td align="left">mg/kg</td>
+</tr>
+<tr class="odd">
+<td align="left"><strong>median w/o PP</strong></td>
+<td align="left">-</td>
+<td align="left"><strong>112.55</strong></td>
+<td align="left">mg/kg</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="performance-characteristics-for-gas-and-measurand-as" class="section level3">
+<h3>performance characteristics for GAS and measurand As</h3>
+<table>
+<thead>
+<tr class="header">
+<th align="left">type</th>
+<th align="left">variance before</th>
+<th align="left">variance after outlier rejection</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">between-laboratory variance</td>
+<td align="left">337.3393</td>
+<td align="left">162.8444</td>
+</tr>
+<tr class="even">
+<td align="left">between-bottle variance</td>
+<td align="left">337.3393</td>
+<td align="left">162.8438</td>
+</tr>
+<tr class="odd">
+<td align="left">repeatability variance</td>
+<td align="left">47.4383</td>
+<td align="left">22.9</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="mesasurment-uncertainty" class="section level3">
+<h3>mesasurment uncertainty</h3>
+<table>
+<thead>
+<tr class="header">
+<th align="left">type</th>
+<th align="left">before</th>
+<th align="left">after outlier rejection</th>
+<th align="left">alternative calculation</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">standard uncertainty</td>
+<td align="left">8.4977</td>
+<td align="left">6.0683</td>
+<td align="left">6.2235</td>
+</tr>
+<tr class="even">
+<td align="left">expanded standard uncertainty</td>
+<td align="left">-</td>
+<td align="left">-</td>
+<td align="left"><strong>14.3514</strong> <em>k</em> = 2.31</td>
+</tr>
+</tbody>
+</table>
+<pre class="r"><code>outlier &lt;- ifelse(outlier==&quot;0&quot;, &quot;X&quot;, outlier)
+df &lt;- data.frame(Sys.Date(), refmat, measurand.name, mean.before, mean, median.before, median.after, median.after.noPP, unit, sL2.a, sbb2.a, sr2.a, u1.a, u2.a, u2.a*t.value, t.value, outlier, p)
+#names(df) &lt;- c(&quot;date&quot;, &quot;RM&quot;, &quot;measurand&quot;, &quot;mean.before&quot;, &quot;mean&quot;, &quot;median.before&quot;, &quot;median.after&quot;, &quot;median.after.noPP&quot;, &quot;unit&quot;, &quot;sL2.a&quot;, &quot;sbb2.a&quot;, &quot;sr2.a&quot;, &quot;u&quot;, &quot;u.alternative&quot;, &quot;U&quot;, &quot;t.value&quot;, &quot;outlier&quot;, &quot;labs remaining&quot;) # needed only the first time
+#write.table(df, &quot;dfGAS.txt&quot;, row.names=FALSE) # needed only the first time
+write.table(df, &quot;dfGAS.txt&quot;, row.names=FALSE, append=TRUE, col.names=FALSE)</code></pre>
+<pre class="r"><code>reference.line &lt;- median.after
+u.Ulim &lt;- median.after + u2.a*t.value
+l.Ulim &lt;- median.after - u2.a*t.value
+ggplot(bymethod.n, aes(x=anal.method, y=median))+geom_point(size=4)+geom_errorbar(aes(ymin=median-se, ymax=median+se), width=0.05)+ geom_abline(intercept = reference.line, slope = 0) + geom_abline(intercept = u.Ulim, slope = 0, linetype =&quot;dotted&quot;) + geom_abline(intercept = l.Ulim, slope = 0, linetype = &quot;dotted&quot;) + mytheme</code></pre>
+<p><img src="GAS_files/figure-html/plotting%20the%20method%20medians.png" title="plot of chunk plotting the method medians" alt="plot of chunk plotting the method medians" width="1200" /></p>
+<p>### Final plot without outliers with u and U</p>
+<pre class="r"><code>plot_lab(measurand, MorT, horw = FALSE, u = TRUE)</code></pre>
+<pre><code>## geom_smooth: method=&quot;auto&quot; and size of largest group is &lt;1000, so using loess. Use &#39;method = x&#39; to change the smoothing method.</code></pre>
+<p><img src="GAS_files/figure-html/unnamed-chunk-5.png" title="plot of chunk unnamed-chunk-5" alt="plot of chunk unnamed-chunk-5" width="2400" /></p>
+</div>
+</div>
+<div id="comparisons-of-method-parameters-based-on-median-of-the-labpacket-medians-after-outlier-removal" class="section level2">
+<h2>Comparisons of method parameters based on median of the Lab+packet medians after outlier removal</h2>
+<pre class="r"><code>print(bymethod.n)</code></pre>
+<pre><code>##   anal.method N   mean median     sd     se
+## 1             2  90.90  90.90 34.507 24.400
+## 2     ICP-AES 1 112.50 112.50     NA     NA
+## 3      ICP-MS 3  99.36  97.37 12.313  7.109
+## 4        INAA 2 121.29 121.29  5.241  3.706
+## 5         XRF 1 119.00 119.00     NA     NA</code></pre>
+<div id="final-result-based-on-median-for-property-value-and-measurement-uncertainty-based-on-variance-components" class="section level3">
+<h3>final result based on median for property value and measurement uncertainty based on variance components</h3>
+<p>The <strong>As</strong> median of the Lab+packet median after outlier removal is <strong>112.55</strong> mg/kg<br />The expanded standard uncertainty for the assigned value of As is <strong>14.3514</strong> with k = 2.31<br />excluded labs for As is/are 18<br />labs remaining for calculations 9</p>
+</div>
+<div id="comments" class="section level3">
+<h3>comments</h3>
+<p>outlier type | lab# :—-| :——- based on Youden plots: |18<br />based on Mandel’s k performance:|<br />based on PP-XRF:|<br />based on detection limit:|</p>
+</div>
+<div id="comments-1" class="section level3">
+<h3>comments</h3>
+<table>
+<thead>
+<tr class="header">
+<th align="left">outlier type</th>
+<th align="left">lab#</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">based on Youden plots:</td>
+<td align="left">18</td>
+</tr>
+<tr class="even">
+<td align="left">based on Mandel’s k performance:</td>
+<td align="left">18</td>
+</tr>
+<tr class="odd">
+<td align="left">based on PP-XRF:</td>
+<td align="left">18</td>
+</tr>
+</tbody>
+</table>
+<pre class="r"><code>sessionInfo()</code></pre>
+<pre><code>## R version 3.1.1 (2014-07-10)
+## Platform: i386-w64-mingw32/i386 (32-bit)
+## 
+## locale:
+## [1] LC_COLLATE=German_Austria.1252  LC_CTYPE=German_Austria.1252   
+## [3] LC_MONETARY=German_Austria.1252 LC_NUMERIC=C                   
+## [5] LC_TIME=German_Austria.1252    
+## 
+## attached base packages:
+## [1] grid      stats     graphics  grDevices utils     datasets  methods  
+## [8] base     
+## 
+## other attached packages:
+## [1] knitr_1.6        plyr_1.8.1       nlme_3.1-117     ape_3.1-3       
+## [5] metRology_0.9-17 plotflow_1.0     gridExtra_0.9.1  ggplot2_1.0.0   
+## 
+## loaded via a namespace (and not attached):
+##  [1] colorspace_1.2-4  digest_0.6.4      evaluate_0.5.5   
+##  [4] formatR_0.10      gtable_0.1.2      htmltools_0.2.4  
+##  [7] labeling_0.2      lattice_0.20-29   MASS_7.3-33      
+## [10] munsell_0.4.2     numDeriv_2012.9-1 proto_0.3-10     
+## [13] Rcpp_0.11.2       reshape2_1.4      rmarkdown_0.2.50 
+## [16] scales_0.2.4      stringr_0.6.2     tools_3.1.1      
+## [19] yaml_2.1.13</code></pre>
+</div>
+</div>
+</div>
+
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+$(document).ready(function () {
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+});
+
+</script>
+
+<!-- dynamically load mathjax for compatibility with --self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "./GAS_files/mathjax-2.3.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
