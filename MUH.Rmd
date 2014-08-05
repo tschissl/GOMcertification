@@ -209,19 +209,21 @@ plot_lab <- function(x, type, horw = FALSE, u = FALSE) {
          u.2lim <- reference.line + 2*hor
          l.lim <- reference.line - hor
          l.2lim <- reference.line - 2*hor
+         lab <- "2*hor"  
          } else  if (u == "TRUE") {
            reference.line <- median.after
              u.lim <- median.after + u2.a 
              u.2lim <- median.after + u2.a*t.value 
              l.lim <- median.after - u2.a 
              l.2lim <- median.after - u2.a*t.value 
+             lab <- "U"
            } else
              {u.lim <- median.after
              u.2lim <- median.after 
              l.lim <- median.after 
              l.2lim <- median.after               
              }
-  p <- ggplot(reorder_by(GOM.Lab, ~anal, analyte, mean), aes(GOM.Lab, anal)) + geom_abline(intercept = reference.line, slope = 0) + geom_abline(intercept = u.2lim, slope = 0, linetype ="dotted") + geom_abline(intercept = l.2lim, slope = 0, linetype = "dotted") + geom_abline(intercept = u.lim, slope = 0, linetype ="dashed") + geom_abline(intercept = l.lim, slope = 0, linetype = "dashed")#  + geom_text( x = -Inf , y = u.2lim, label = lab) # works only for horwitz also annotations does not work
+  p <- ggplot(reorder_by(GOM.Lab, ~anal, analyte, mean), aes(GOM.Lab, anal)) + geom_abline(intercept = reference.line, slope = 0) + geom_abline(intercept = u.2lim, slope = 0, linetype ="dotted") + geom_abline(intercept = l.2lim, slope = 0, linetype = "dotted") + geom_abline(intercept = u.lim, slope = 0, linetype ="dashed") + geom_abline(intercept = l.lim, slope = 0, linetype = "dashed")  + geom_text( x = 1 , y = u.2lim, label = lab) # works only for horwitz also annotations does not work
   p <- p + geom_boxplot(aes(fill=anal.method)) + geom_point(size=4) + geom_point(aes(colour=anal.prep), size = 3.5)
   p + xlab("lab") + ylab(unit) + labs(title = measurand.name) + labs(colour = "Prep")  + geom_smooth(aes(group=1)) + mytheme 
 }
@@ -236,8 +238,7 @@ plot_lab(measurand, MorT, horw=TRUE, u =FALSE)
 
 ```{r fig.width=4, fig.height=4}
 plot_youd(measurand.name, 'MUH', 'GAS')
-```
-```{r fig.width=4, fig.height=4}
+
 plot_youd(measurand.name, 'MUH', 'OKUM')
 ```
 

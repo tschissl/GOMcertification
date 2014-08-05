@@ -45,7 +45,7 @@ options(base64_images = 'inline')
 ### defining the RM and measurand to be analysed
 ```{r defining the measurand and RM}
 refmat <- 'OKUM' # defining the RM
-measurand.name <- 'P2O5'
+measurand.name <- 'MgO'
 ``` 
 ```{r defining the variables used for selected RM, include=FALSE}
 '%p%' <- function(a, b) {as.character(paste (a, b, sep =""))} # the measureands have different endings depending on which RM: OKUM not extention, MUH extention ".1" and GAS has the extention ".2"

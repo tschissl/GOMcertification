@@ -1,19 +1,14 @@
 ---
 title: "GAS Certification"
 author: "TCM"
-date: "Sunday, July 20, 2014"
+date: "Tuesday, July 21, 2014"
 output:
-  word_document:
-    fig_caption: yes
   pdf_document: default
   html_document:
-    mathjax: default
-    self_contained: yes
+    mathjax: local
+    self_contained: no
+  word_document: default
 ---
-
-```{r results='hide', include=FALSE}
-# opts_chunk$set(out.extra = 'style="float:left;"')  # left # squeezes too much
-```
 Automated analysing submitted data for GAS based on defined outliers
 ========================================================
 Thomas Meisel (`r as.character(Sys.Date())`)  
@@ -425,6 +420,7 @@ write.table(df, "df3.txt", row.names=FALSE, append=TRUE, col.names=FALSE)
 ```{r}
 df3 <- read.table("~/GitHub/GOMcertification/df3.txt", header=T, quote="\"")
 final <- ddply(df3, c("date","RM","measurand","based.on", "unit"), numcolwise(meanGOM))
+write.csv(final,"GASall.csv")
 ```
 #### final
 
@@ -445,11 +441,26 @@ CV2 <- subset.data.frame(certified.values, n >= 10) # CV based on IAG protocol w
 CV3 <- subset.data.frame(certified.values, n < 10) # Information value based on IAG protocol with n < 10
 write.table(CV2, "CV2.txt", row.names=FALSE) # just CV
 write.table(CV3, "CV2.txt", row.names=FALSE, append=TRUE, col.names=FALSE) #CV and IV
-CV <- read.table("~/GitHub/GOMcertification/CV2.txt", header=TRUE, quote="\"")
+CV <- read.table("C:/Daten/projects/R/certification/CV2.txt", header=TRUE, quote="\"")
 #xtCV <- xtable(CV, digits=c(0,0,0,0,2,0,4,4,0))
 #print(xtCV, type="html")
 kable(CV, digits=c(0,0,0,2,2,4,4,0), padding=1)
 ```
+```{r}
+REE.chondrites <- read.csv("~/GitHub/REE/REE.chondrites.csv", sep=";") # reading chondrite normalisig values from file
+REE.chondrites <- rename(REE.chondrites, c("norm"= "REE")) # renaming the column to make it suitable for merging
+REE <- c("La","Ce","Pr", "Nd", "Pm", "Sm", "Eu", "Gd", "Tb", "Dy", "Ho", "Er", "Tm", "Yb", "Lu") # needed for extracting the REE from the final table sheet
+RM <- read.table("~/GitHub/GOMcertification/CV2.txt", header=TRUE, quote="\"") # reading all the finalised property values
+RM.REE <- subset(RM, measurand %in% REE, select=c(RM,measurand,PV)) # extacting onl the REE values
+RM.REE <- rename(RM.REE, c("measurand"="REE")) # renaming the column head suitable for merging
+RM.REE <- merge(REE.chondrites, RM.REE, by = "REE", all.x=TRUE) # merging the data set so that element Pm is also included
+RM.normalised <- ddply(RM.REE, c("RM"), transform, normalised = PV/chondrite) # adding a chondrite normalised column
+RM.normalised[15,5] <- (RM.normalised[9,5]+RM.normalised[11,5])/2
+REEtheme <- theme_grey() + theme(plot.title = element_text(colour = "black", size = rel(2)))+ theme(axis.title.x = element_text(size = rel(1.8)))+ theme(axis.title.y = element_text(size = rel(1.8)))+theme(axis.text.x = element_text(size = rel(1.2))) + theme(axis.text.y = element_text(size = rel(1.2)))
+p <- ggplot(data=RM.normalised, aes(x=REE, y=normalised, group=1)) + geom_line(size= 1.2)
+p + scale_x_discrete(limits=c("La","Ce","Pr", "Nd", "Pm", "Sm", "Eu", "Gd", "Tb", "Dy", "Ho", "Er", "Tm", "Yb", "Lu"))  + coord_trans(y="log2") + REEtheme
+```
+
 ```{r sessionInfo, include=TRUE, echo=TRUE, results='markup'}
 sessionInfo()
 ```
