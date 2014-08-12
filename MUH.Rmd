@@ -44,7 +44,7 @@ options(base64_images = 'inline')
 ### defining the RM and measurand to be analysed
 ```{r defining the measurand and RM}
 refmat <- 'MUH' # defining the RM
-measurand.name <- 'Zr'
+measurand.name <- 'Cr'
 ``` 
 ```{r defining the variables used for selected RM, include=FALSE}
 '%p%' <- function(a, b) {as.character(paste (a, b, sep =""))} # the measureands have different endings depending on which RM: OKUM not extention, MUH extention ".1" and GAS has the extention ".2"
@@ -223,7 +223,7 @@ plot_lab <- function(x, type, horw = FALSE, u = FALSE) {
              l.lim <- median.after 
              l.2lim <- median.after               
              }
-  p <- ggplot(reorder_by(GOM.Lab, ~anal, analyte, mean), aes(GOM.Lab, anal)) + geom_abline(intercept = reference.line, slope = 0) + geom_abline(intercept = u.2lim, slope = 0, linetype ="dotted") + geom_abline(intercept = l.2lim, slope = 0, linetype = "dotted") + geom_abline(intercept = u.lim, slope = 0, linetype ="dashed") + geom_abline(intercept = l.lim, slope = 0, linetype = "dashed")  + geom_text( x = 1 , y = u.2lim, label = lab) # works only for horwitz also annotations does not work
+  p <- ggplot(reorder_by(GOM.Lab, ~anal, analyte, mean), aes(GOM.Lab, anal)) + geom_abline(intercept = reference.line, slope = 0) + geom_abline(intercept = u.2lim, slope = 0, linetype ="dotted") + geom_abline(intercept = l.2lim, slope = 0, linetype = "dotted") + geom_abline(intercept = u.lim, slope = 0, linetype ="dashed") + geom_abline(intercept = l.lim, slope = 0, linetype = "dashed") # + geom_text( x = 1 , y = u.2lim, label = lab) #works only for horwitz also annotations does not work
   p <- p + geom_boxplot(aes(fill=anal.method)) + geom_point(size=4) + geom_point(aes(colour=anal.prep), size = 3.5)
   p + xlab("lab") + ylab(unit) + labs(title = measurand.name) + labs(colour = "Prep")  + geom_smooth(aes(group=1)) + mytheme 
 }
